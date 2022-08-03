@@ -43,6 +43,7 @@ def vt_to_ht(inputs, W):
             qml.Rot(W[d, qbit, 0], W[d, qbit, 1], W[d, qbit, 2], wires=qbit)
     return [qml.expval(qml.PauliZ(i)) for i in range(HIDDEN_DIM)]
 
+
 @qml.qnode(device=dev2, interface="pytorch", diff_method="backprop")
 def vt_to_yt_forget(inputs, W):
     for i in range(NUM_QUBITS):
@@ -56,6 +57,7 @@ def vt_to_yt_forget(inputs, W):
         for qbit in range(NUM_QUBITS):
             qml.Rot(W[d, qbit, 0], W[d, qbit, 1], W[d, qbit, 2], wires=qbit)
     return [qml.expval(qml.PauliZ(i)) for i in range(OUTPUT_DIM)]
+
 
 @qml.qnode(device=dev3, interface="pytorch", diff_method="backprop")
 def vt_to_yt_input(inputs, W):
@@ -71,6 +73,7 @@ def vt_to_yt_input(inputs, W):
             qml.Rot(W[d, qbit, 0], W[d, qbit, 1], W[d, qbit, 2], wires=qbit)
     return [qml.expval(qml.PauliZ(i)) for i in range(OUTPUT_DIM)]
 
+
 @qml.qnode(device=dev4, interface="pytorch", diff_method="backprop")
 def vt_to_yt_output(inputs, W):
     for i in range(NUM_QUBITS):
@@ -85,6 +88,7 @@ def vt_to_yt_output(inputs, W):
             qml.Rot(W[d, qbit, 0], W[d, qbit, 1], W[d, qbit, 2], wires=qbit)
     return [qml.expval(qml.PauliZ(i)) for i in range(OUTPUT_DIM)]
 
+
 @qml.qnode(device=dev5, interface="pytorch", diff_method="backprop")
 def vt_to_yt_update(inputs, W):
     for i in range(NUM_QUBITS):
@@ -98,6 +102,7 @@ def vt_to_yt_update(inputs, W):
         for qbit in range(NUM_QUBITS):
             qml.Rot(W[d, qbit, 0], W[d, qbit, 1], W[d, qbit, 2], wires=qbit)
     return [qml.expval(qml.PauliZ(i)) for i in range(OUTPUT_DIM)]
+
 
 @qml.qnode(device=dev6, interface="pytorch", diff_method="backprop")
 def vt_to_yt(inputs, W):
@@ -131,6 +136,8 @@ class QLSTM(nn.Module):
         self.output_l = qml.qnn.TorchLayer(vt_to_yt_output, weight_shapes_dict)
         self.y_l = qml.qnn.TorchLayer(vt_to_yt, weight_shapes_dict)
         self.ht_l = qml.qnn.TorchLayer(vt_to_ht, weight_shapes_dict)
+
+
     def forward(self, input_seq):
         y_seq = []
         batch_size, seq_length, feature_size = input_seq.size()  # shape is  seq x features assume no batches
@@ -152,9 +159,9 @@ class QLSTM(nn.Module):
             ht = self.ht_l(ot * torch.tanh(ct))
             yt = self.y_l(ot * torch.tanh(ct))
             y_seq.append(yt)
-        y = y_seq[-1] # we are predicting T_n+1 | T_1->n
+        y = y_seq[-1]  # we are predicting T_n+1 | T_1->n
 
         return y
 
 
-print(f"number of parameters: {sum(p.numel() for p in QLSTM().parameters() if p.requires_grad)}")
+print(f"number of parameters in quantum model: {sum(p.numel() for p in QLSTM().parameters() if p.requires_grad)}")

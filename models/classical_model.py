@@ -31,13 +31,12 @@ class LSTM(nn.Module):
         y_seq = []
         batch_size, seq_length, feature_size = input_seq.size()  # shape is  seq x features assume no batches
 
-        ct = torch.zeros(batch_size, vt_dim)  # .to(device)
-        ht = torch.zeros(batch_size, HIDDEN_DIM)  # .to(device)
-
+        ct = torch.zeros(1, batch_size, HIDDEN_DIM)  # .to(device)
+        ht = torch.zeros(1, batch_size, HIDDEN_DIM)  # .to(device)
         h_out, (ht, ct) = self.LSTM_l(input_seq, (ht, ct))
 
-        y = self.y_l(h_out)
+        y = self.y_l(ht[0])
         return y
 
 
-print(sum(p.numel() for p in LSTM().parameters() if p.requires_grad))
+print(f"number of parameters in classical model: {sum(p.numel() for p in LSTM().parameters() if p.requires_grad)}")
